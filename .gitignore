@@ -1,0 +1,40 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.lock-wscript
+.waf-clean
+
+# Build output
+build/
+dist/
+out/
+
+# Logs
+logs/
+*.log
+*.gz
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# IDE specific files
+.vscode/
+
+# Local environment files
+.env
+.env.development
+.env.test
+.env.production
+
+# Editor tmp files
+Thumbs.db
+.DS_Store
+
+# Optional directories
+tests/
+.build/
+.cache/
