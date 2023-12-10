@@ -1,76 +1,83 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const { generatePath } = require('react-router-dom');
+const Sequelize = require('sequelize');
+const User = require('./models')
+const app = express();
 
-const app = express()
+const sequelize = new Sequelize('database_name', 'username', 'password', {
+  dialect: 'mysql',
+});
 
-const DbUrl = 'mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false'
 
-mongoose.connect(DbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then((result) => app.listen(8080,() => console.log('Sever running on port 8O8O')))
-    .catch((err) => console.log(err));
+// Connect to the database
+sequelize.authenticate()
+  .then(() => console.log('Connected to the database!'))
+  .catch((error) => console.error('Error connecting to the database:', error));
+
+// Create database tables (migrations)
+sequelize.sync();
+
 // Middleware
-app.use(express.urlencoded({ extended: true }))
-app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-
-// Code generator
-genCode = () => {
-    const index1 = (Math.random().toFixed(2)*100).toString()
-    const index2 = (Math.random().toFixed(2)*100).toString()
-
-    const code = index2.concat(index1)
-    if (code.length < 4) {
-        return code.concat('4')
-    }
-    if (code.includes('.')) {
-        return genCode()
-    }
-    return index2.concat(index1)
-}
 // APIs
-app.post('/sign-up', (req, res) => {
-    
-    console.log(req.body);
-    // referral code generator using the username before saving to database
-    const user_name = req.body.User_name;
-    const Referral_code = user_name.concat('-',genCode());
+app.post('/sign-up', async (req, res) => {
+  const { username, ...userData } = req.body;
+  const referralCode = `${username}-${genCode()}`;
 
-    console.log(Referral_code);
-    
-    // const user = new User(req.body)
-    // user.save()
-    //     .then((result) => {
-    //         console.log(result);
-    //         res.json(result)
-    //     }).catch((err) => {
-    //         res.json({ error: err })
-    //     });
-})
+  try {
+    const createdUser = await User.create({
+      ...userData,
+      referralCode,
+    });
 
-app.post('/sign-in', (req, res) => {
-    console.log(req.body);
+    res.json(createdUser);
+  } catch (error) {
+    console.error(error);
+    res.json({ error });
+  }
+});
 
-    User.findOne(req.body)
-        .then((result) => {
-            console.log(result) 
-            // The use
-            res.json(result)
-        }).catch((err) => {
-            console.log(err)
-            res.json({ error: err })
-        });
-})
-// Transaction APIs
-app.post('/pay', (req, res) => {
-    console.log(req.body);
-    res.send('API reached')
-})
+app.post('/sign-in', async (req, res) => {
+  try {
+    const user = await User.findOne(req.body);
 
-app.post('/send', (req, res) => {
-    // Send transaction which triggers 
-    console.log(req.body);
-    res.send('API reached')
-})
+    if (user) {
+      res.json(user);
+    } else {
+      res.json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.json({ error });
+  }
+});
 
+app.post('/pay', async (req, res) => {
+  try {
+    const user = await User.findOne(req.body);
 
+    if (user) {
+      if (user.referredCode) {
+        // Implement logic to pay the referrer
+      }
+
+      if (user.referralCode) {
+        // Implement transaction logic
+      }
+    } else {
+      res.json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.json({ error });
+  }
+});
+
+app.post('/send', async (req, res) => {
+  // Implement transaction logic
+
+  res.send('API reached');
+});
+
+app.listen(8080, () => console.log('Server running on port 8080'));
